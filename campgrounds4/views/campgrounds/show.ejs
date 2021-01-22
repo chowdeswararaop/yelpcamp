@@ -1,0 +1,123 @@
+<% layout('layouts/boilerplate') %> 
+
+<link rel="stylesheet" href="/stylesheets/star.css">
+
+    
+<div class="row">
+  <div class="col-5" >
+    
+    
+    <div class="card mb-3" >
+
+      <div id="carouselExampleControls" class="carousel slide" data-bs-ride="carousel">
+        <div class="carousel-inner">
+          <% campground.images.forEach((img, i) => {  %>
+          <div class="carousel-item <%= i === 0 ? 'active' : ''%>" data-bs-interval="2000">
+              <img src="<%=img.url%>" class="d-block w-100" alt="">
+          </div>
+          <% }) %>
+
+      </div>
+          <%if(campground.images.length>1){%>
+        <a class="carousel-control-prev" href="#carouselExampleControls" role="button" data-bs-slide="prev">
+          <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+          <span class="visually-hidden">Previous</span>
+        </a>
+        <a class="carousel-control-next" href="#carouselExampleControls" role="button" data-bs-slide="next">
+          <span class="carousel-control-next-icon" aria-hidden="true"></span>
+          <span class="visually-hidden">Next</span>
+        </a>
+          <%}%>
+      </div>
+      </div>
+      
+      <div class="card-body">
+        <h5 class="card-title"><%=campground.title  %> </h5>
+        <p class="card-text"><%=campground.description  %> </p>
+      </div>
+      <ul class="list-group list-group-flush">
+        <li class="list-group-item text-muted"><%=campground.location%> </li>
+        <li class="list-group-item"><%=campground.author.username%> </li>
+        <li class="list-group-item">$<%=campground.price%> </li>
+      </ul>
+    <%if(currentuser&&campground.author.equals(currentuser._id)){%>      
+      <div class="card-body">
+        <a href="/campgrounds/<%=campground.id%>/edit" class="card-link btn btn-info">Edit</a>
+        <form  class="d-inline"  action="/campgrounds/<%=campground.id%>?_method=DELETE" method="POST">
+        <button  class="btn btn-danger">Delete</button>
+      </form>
+    </div>
+    <%}%> 
+  </div>
+  <div class="col-5 offset-1">
+    <div id='map' style='width: 400px; height: 300px;'></div>
+    <%if(currentuser){%> 
+    <form action="/campgrounds/<%=campground._id%>/reviews" method="post" class="needs-validation" novalidate>
+     <div class="mb-3">
+      <%- include("../partials/star")%>
+     </div>
+     <div class="mb-3">
+       <label class="form-label" for="body">Review</label>
+       <textarea class="form-control" id="body" name="review[body]" required></textarea>
+      </div>
+      <button  class="btn btn-success mb-3">submit</button>
+    </form>
+    <%}%> 
+    <%for(let r of campground.reviews){%> 
+     <div class="card mb-3">
+        <div class="card-body">
+            <p class="starability-result starability-fade" data-rating="<%=r.rating%>"></p>
+          
+         <h6 class="card-subtitle mb-2 text-muted"> by <%=r.author.username%> </h6>
+          <p class="card-text">Review:<%=r.body%></p>
+          <%if(currentuser&&r.author.equals(currentuser._id)){%>
+          <form action="/campgrounds/<%=campground.id%>/reviews/<%=r.id%>?_method=DELETE" method="post">
+          <button class="btn btn-sm btn-danger">Delete</button>
+          </form>
+         <%}%> 
+          </div>
+        </div>
+        <%}%> 
+      </div>
+      </div>
+      
+    
+      
+<script>
+var mapToken="pk.eyJ1IjoiY2hvd2Rlc3dhcmFyYW8iLCJhIjoiY2trNmQ1Z3AzMDJ0NzJ1cDV3aWpnb3M3aiJ9.bVsAd0HA5a7aJJMFbD5NAQ"
+var campground= [<%-campground.geometry.coordinates%>]
+
+
+mapboxgl.accessToken =mapToken;
+var map = new mapboxgl.Map({
+container: 'map',
+style: 'mapbox://styles/mapbox/outdoors-v11',
+center:campground,
+zoom: 8,
+
+});
+var marker = new mapboxgl.Marker()
+.setLngLat(campground)
+.addTo(map);
+//Initialize the geolocate control.
+var geolocate = new mapboxgl.GeolocateControl({
+  positionOptions: {
+      enableHighAccuracy: true
+  },
+  trackUserLocation: true
+});
+// Add the control to the map.
+map.addControl(geolocate);
+var scale = new mapboxgl.ScaleControl({
+    maxWidth: 80,
+    unit: 'imperial'
+});
+map.addControl(scale);
+scale.setUnit('metric');
+ var nav = new mapboxgl.NavigationControl();
+ map.addControl(nav, 'top-left');
+
+
+
+</script>
+<!-- <script src="/javascript/map.js"></script> -->
